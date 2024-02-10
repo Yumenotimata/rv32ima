@@ -1,0 +1,2 @@
+/usr/bin/ar qc build/libelf.a CMakeFiles/elf.dir/src/elf.cpp.o
+/usr/bin/ranlib build/libelf.a

@@ -1,0 +1,2 @@
+/usr/bin/ar qc build/libelf-loader.a CMakeFiles/elf-loader.dir/src/elf_loader.cpp.o
+/usr/bin/ranlib build/libelf-loader.a

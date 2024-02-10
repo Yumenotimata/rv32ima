@@ -1,0 +1,6 @@
+/home/kouya/rv32ima/CMakeFiles/main.dir
+/home/kouya/rv32ima/CMakeFiles/edit_cache.dir
+/home/kouya/rv32ima/CMakeFiles/rebuild_cache.dir
+/home/kouya/rv32ima/elf/CMakeFiles/elf.dir
+/home/kouya/rv32ima/elf/CMakeFiles/edit_cache.dir
+/home/kouya/rv32ima/elf/CMakeFiles/rebuild_cache.dir
