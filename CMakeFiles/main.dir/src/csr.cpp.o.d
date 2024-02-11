@@ -59,4 +59,5 @@ CMakeFiles/main.dir/src/csr.cpp.o: /home/kouya/rv32ima/src/csr.cpp \
  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
- /usr/include/x86_64-linux-gnu/bits/stdio_lim.h
+ /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+ /home/kouya/rv32ima/src/../inc/def.hpp

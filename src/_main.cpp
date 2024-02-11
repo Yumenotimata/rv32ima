@@ -74,7 +74,7 @@ int main(void){
                     std::cout << "test failed" << std::endl;
                 break;
             }
-            // usleep(100000);
+            // usleep(10000);
         }
     }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstdio>
 
 namespace rv32ima{
     template <typename T, uint8_t e,uint8_t s = e>
@@ -13,35 +14,45 @@ namespace rv32ima{
             T raw;
     };
 
-    enum struct trap_code_t{
-        LOAD_ADDR_MISALIGNED    = 4,
-        LOAD_ACCESS_FAULT       = 5,
-        STORE_ADDR_MISALIGNED   = 6,
-        STORE_ACCESS_FAULT      = 7,
-        ECALL_FROM_MMODE        = 11,
+    using trap_code_t = uint32_t;
+    namespace trap_code{
+        constexpr trap_code_t LOAD_ADDR_MISALIGNED    = 4;
+        constexpr trap_code_t LOAD_ACCESS_FAULT       = 5;
+        constexpr trap_code_t STORE_ADDR_MISALIGNED   = 6;
+        constexpr trap_code_t STORE_ACCESS_FAULT      = 7;
+        constexpr trap_code_t ECALL_FROM_MMODE        = 11;
+        constexpr trap_code_t MACHINE_TIMER_INTERRUPT = 0;         
     };
 
-    enum struct trap_type_t{
-        EXCEPTION = 0,
-        INTERRUPT = 1
+    using trap_type_t = uint32_t;
+    namespace trap_type{
+        constexpr trap_type_t EXCEPTION = 0;
+        constexpr trap_type_t INTERRUPT = 1;
+    };
+
+    using trap_vector_mode_t = uint32_t;
+    namespace trap_vector_mode{
+        constexpr trap_vector_mode_t DIRECT     = 0;
+        constexpr trap_vector_mode_t VECTORED   = 1;
     };
 
     struct trap_t{
         public:
             void set(trap_type_t type, trap_code_t code){
+                if(occured && type != trap_type::EXCEPTION) return;
                 this->type = type;
                 this->code = code;
-                this->valid = true;
+                this->occured = true;
             };
-            void disable(){
-                this->valid = false;
+            void clear(){
+                this->occured = false;
             };
-            bool is_valid(){
-                return valid;
+            bool has_occurred(){
+                return occured;
             };
-        private:
             trap_type_t type;
             trap_code_t code;
-            bool valid;
+        private:
+            bool occured;
     };
 }

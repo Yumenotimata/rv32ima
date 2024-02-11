@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../inc/def.hpp"
-
 #include <memory>
 
 namespace rv32ima {

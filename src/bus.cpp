@@ -45,8 +45,8 @@ namespace rv32ima{
     uint16_t bus_t::read16(bool trap_handle, uint32_t addr){
         if(trap_handle && (addr & 0x1) != 0){
             trap.set(
-                trap_type_t::EXCEPTION,
-                trap_code_t::LOAD_ADDR_MISALIGNED
+                trap_type::EXCEPTION,
+                trap_code::LOAD_ADDR_MISALIGNED
             );
             return 0x0000;
         }
@@ -56,8 +56,8 @@ namespace rv32ima{
     uint32_t bus_t::read32(bool trap_handle, uint32_t addr){
         if(trap_handle && (addr & 0x3) != 0){
             trap.set(
-                trap_type_t::EXCEPTION,
-                trap_code_t::LOAD_ADDR_MISALIGNED
+                trap_type::EXCEPTION,
+                trap_code::LOAD_ADDR_MISALIGNED
             );
             return 0x00000000;
         }
@@ -67,8 +67,8 @@ namespace rv32ima{
     void bus_t::write16(bool trap_handle, uint32_t addr, uint16_t val){
         if(trap_handle && (addr & 0x1) != 0){
             trap.set(
-                trap_type_t::EXCEPTION,
-                trap_code_t::STORE_ADDR_MISALIGNED
+                trap_type::EXCEPTION,
+                trap_code::STORE_ADDR_MISALIGNED
             );
             return;
         }
@@ -79,8 +79,8 @@ namespace rv32ima{
     void bus_t::write32(bool trap_handle, uint32_t addr, uint32_t val){
         if(trap_handle && (addr & 0x3) != 0){
             trap.set(
-                trap_type_t::EXCEPTION,
-                trap_code_t::STORE_ADDR_MISALIGNED
+                trap_type::EXCEPTION,
+                trap_code::STORE_ADDR_MISALIGNED
             );
             return;
         }

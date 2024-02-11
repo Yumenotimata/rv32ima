@@ -13,14 +13,32 @@ namespace rv32ima{
 
     }
 
-    void processor_t::step(){
-        fetch();
+    void processor_t::handle_trap(){
+        csr.mcause.trap_type = bus->trap.type;
+        csr.mcause.trap_code = bus->trap.code;
+        csr.mstatus.pie = (uint32_t)csr.mstatus.ie;
+        csr.mepc = pc;
 
-        if(bus->trap.is_valid()){
-            printf("trap \n");
-            bus->trap.disable();
+        if((uint32_t)csr.mstatus.ie == 1 && bus->trap.type == trap_type::INTERRUPT){
+            if(bus->trap.code == trap_code::MACHINE_TIMER_INTERRUPT) csr.mip.tip = 1;
         }
 
+        csr.mstatus.ie = 0;
+
+        if((uint32_t)csr.mtvec.mode == trap_vector_mode::VECTORED){
+            pc = ((uint32_t)csr.mtvec.base << 2) + (bus->trap.code << 2);
+        }else if((uint32_t)csr.mtvec.mode == trap_vector_mode::DIRECT){
+            pc = ((uint32_t)csr.mtvec.base << 2);
+        }
+    }
+
+    void processor_t::step(){
+        if(bus->trap.has_occurred()){
+            handle_trap();
+            bus->trap.clear();
+        }
+
+        fetch();
         execute();
         pc += 4;
     }
@@ -63,26 +81,50 @@ namespace rv32ima{
                 }
                 break;
             case 0x33:
-                switch(funct3)
+                if(funct7 == 0x1)
                 {
-                    case 0x0: // add / sub
-                        if(funct7 == 0x0) reg[rd] = reg[rs1] + reg[rs2]; else reg[rd] = reg[rs1] - reg[rs2]; break;
-                    case 0x1: // sll
-                        reg[rd] = reg[rs1] << (reg[rs2] & 0x1f); break;
-                    case 0x2: // slt
-                        reg[rd] = (int32_t)reg[rs1] < (int32_t)reg[rs2]; break;
-                    case 0x3: // sltu
-                        reg[rd] = (uint32_t)reg[rs1] < (uint32_t)reg[rs2]; break;
-                    case 0x4: // xor
-                        reg[rd] = reg[rs1] ^ reg[rs2]; break;
-                    case 0x5: // srl / sra
-                        if(funct7 == 0x0) reg[rd] = reg[rs1] >> (reg[rs2] & 0x1f); else reg[rd] = (int32_t)reg[rs1] >> (reg[rs2] & 0x1f); break;
-                    case 0x6: // or
-                        reg[rd] = reg[rs1] | reg[rs2]; break;
-                    case 0x7: // and
-                        reg[rd] = reg[rs1] & reg[rs2]; break;
+                    switch(funct3)
+                    {
+                        case 0x0: // mul
+                            reg[rd] = (int32_t)reg[rs1] * (int32_t)reg[rs2]; break;
+                        case 0x1: // mulh
+                            reg[rd] = (int32_t)(((int64_t)(int32_t)reg[rs1] * (int64_t)(int32_t)reg[rs2]) >> 32); break;
+                        case 0x2: // mulhsu
+                            reg[rd] = (int32_t)(((int64_t)(int32_t)reg[rs1] * (uint64_t)(uint32_t)reg[rs2]) >> 32); break;
+                        case 0x3: // mulhu
+                            reg[rd] = (uint32_t)(((uint64_t)(uint32_t)reg[rs1] * (uint64_t)(uint32_t)reg[rs2]) >> 32); break;
+                        case 0x4: // div
+                            if(reg[rs2] == 0) reg[rd] = -1; else if(reg[rs2] == -1) reg[rd] = reg[rd]; else reg[rd] = (int32_t)reg[rs1] / (int32_t)reg[rs2]; break;
+                        case 0x5: // divu
+                            if(reg[rs2] == 0) reg[rd] = -1; else reg[rd] = (uint32_t)reg[rs1] / (uint32_t)reg[rs2]; break;
+                        case 0x6: // rem
+                            if(reg[rs2] == 0) reg[rd] = reg[rs1]; else if(reg[rs2] == -1) reg[rd] = 0; else reg[rd] = (int32_t)reg[rs1] % (int32_t)reg[rs2]; break;
+                        case 0x7: // remu
+                            if(reg[rs2] == 0) reg[rd] = reg[rs1]; else reg[rd] = (uint32_t)reg[rs1] % (uint32_t)reg[rs2]; break;
+                    }
+                }else
+                {
+                    switch(funct3)
+                    {
+                        case 0x0: // add / sub
+                            if(funct7 == 0x0) reg[rd] = reg[rs1] + reg[rs2]; else reg[rd] = reg[rs1] - reg[rs2]; break;
+                        case 0x1: // sll
+                            reg[rd] = reg[rs1] << (reg[rs2] & 0x1f); break;
+                        case 0x2: // slt
+                            reg[rd] = (int32_t)reg[rs1] < (int32_t)reg[rs2]; break;
+                        case 0x3: // sltu
+                            reg[rd] = (uint32_t)reg[rs1] < (uint32_t)reg[rs2]; break;
+                        case 0x4: // xor
+                            reg[rd] = reg[rs1] ^ reg[rs2]; break;
+                        case 0x5: // srl / sra
+                            if(funct7 == 0x0) reg[rd] = reg[rs1] >> (reg[rs2] & 0x1f); else reg[rd] = (int32_t)reg[rs1] >> (reg[rs2] & 0x1f); break;
+                        case 0x6: // or
+                            reg[rd] = reg[rs1] | reg[rs2]; break;
+                        case 0x7: // and
+                            reg[rd] = reg[rs1] & reg[rs2]; break;
+                    }
                 }
-                break; 
+                break;
             case 0x13:
                 switch(funct3)
                 {
@@ -132,15 +174,15 @@ namespace rv32ima{
             case 0x73: // csr
                 switch(funct3)
                 {
-                    case 0x0: // ecall / mret
+                    case 0x0: // system
                         switch(funct7)
                         {
                             case 0x0: // ecall
-                                csr[mcause] = (uint32_t)trap_code_t::ECALL_FROM_MMODE; pc = csr[mtvec] - 4; break;
+                                bus->trap.set(trap_type::EXCEPTION, trap_code::ECALL_FROM_MMODE); break;
                             case 0x18: // mret
-                                pc = csr[mepc] - 4; break;
+                                pc = csr.mepc - 4; break;
                             default:
-                                printf("Unknown instruction 0x%08x\n", inst);
+                                printf("Unknown system instruction 0x%08x\n", inst);
                                 exit(1);
                         }
                         break;
@@ -160,8 +202,38 @@ namespace rv32ima{
                 break;
             case 0x0f: //fence
                 break;
+            case 0x2f:
+                switch(funct5)
+                {
+                    case 0x1: // amoswap.w
+                        reg[rd] = bus->read32(true, reg[rs1]); bus->write32(true, reg[rs1], reg[rs2]); break;
+                    case 0x0: // amoadd.w
+                        reg[rd] = bus->read32(true, reg[rs1]); bus->write32(true, reg[rs1], reg[rs2] + reg[rd]); break;
+                    case 0x8: // amoor.w
+                        reg[rd] = bus->read32(true, reg[rs1]); bus->write32(true, reg[rs1], reg[rs2] | reg[rd]); break;
+                    case 0xc: // amoand.w
+                        reg[rd] = bus->read32(true, reg[rs1]); bus->write32(true, reg[rs1], reg[rs2] & reg[rd]); break;
+                    case 0x2: // lr.w
+                        reg[rd] = bus->read32(true, reg[rs1]); register_reservation[reg[rs1]] = true; break;
+                    case 0x3: // sc.w
+                    {
+                        auto it = register_reservation.find(reg[rs1]);
+                        if(it != register_reservation.end()) {
+                            register_reservation.erase(it);
+                            bus->write32(true, reg[rs1], reg[rs2]);
+                            reg[rd] = 0;
+                        }else {
+                            reg[rd] = 1;
+                        } 
+                        break;
+                    }
+                    default:
+                        printf("Unknown amo instruction 0x%08x, pc = 0x%08x\n", inst, pc);
+                        exit(1);
+                }
+                break;
             default:
-                printf("Unknown instruction 0x%08x\n", inst);
+                printf("Unknown instruction 0x%08x, pc = 0x%08x\n", inst, pc);
                 exit(1);
         }
     }

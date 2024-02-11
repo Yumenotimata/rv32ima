@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <cstdlib>
+#include <unordered_map>
 
 #include "csr.hpp"
 #include "disassembler.hpp"
@@ -31,11 +32,13 @@ namespace rv32ima{
             void step();
             void fetch();
             void execute();
+            void handle_trap();
 
             csr_t csr;
             register_t reg;
             std::unique_ptr<bus_t> bus;
             uint32_t pc, inst; 
+            std::unordered_map<uint32_t, bool> register_reservation;
     };
 
     inline uint32_t sext(uint32_t val, uint8_t t);
