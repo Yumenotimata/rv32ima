@@ -5,6 +5,8 @@
 
 #include <fstream>
 
+extern FILE *fp;
+
 namespace rv32ima{
     void load_binary(const char *bin_path, std::unique_ptr<uint8_t[]> &ram, uint32_t offset_addr){
         std::ifstream ifs(bin_path, std::ios::binary);
@@ -27,19 +29,50 @@ namespace rv32ima{
     bus_t::bus_t(std::unique_ptr<uint8_t[]> &&ram, uint32_t ramsize) 
         : ram(std::move(ram)), ramsize(ramsize)
     {
-
+        uart = std::make_unique<uart_t>(trap);
+        clint = std::make_unique<clint_t>(trap);
     }
 
     bus_t::~bus_t(){
 
     }
 
+    void bus_t::step(){
+        clint->step();
+    }
+
     uint8_t bus_t::read8(uint32_t addr){
-        return ram[addr];
+        if(addr > ramsize){
+            printf("write8: addr: 0x%x\n", addr);
+            exit(1);
+        }
+        switch(addr & 0xffff0000){
+            case 0x10000000:
+                return uart->read(addr);
+            case 0x11000000:
+                return clint->read(addr);
+            default:
+                return ram[addr];
+        }
     }
 
     void bus_t::write8(uint32_t addr, uint8_t val){
-        ram[addr] = val;
+        if(addr > ramsize){
+            printf("write8: addr: 0x%x, val: 0x%x\n", addr, val);
+            exit(1);
+        }
+        switch(addr & 0xffff0000){
+            case 0x10000000:
+                uart->write(addr, val);
+                break;
+            case 0x11000000:
+                clint->write(addr, val);
+                break;
+            default:
+                ram[addr] = val;
+                break;
+        }
+        //fprintf(fp, "write8: addr: 0x%08x, val: 0x%02x\n", addr, val);
     }
 
     uint16_t bus_t::read16(bool trap_handle, uint32_t addr){
@@ -48,6 +81,8 @@ namespace rv32ima{
                 trap_type::EXCEPTION,
                 trap_code::LOAD_ADDR_MISALIGNED
             );
+            printf("alignement error\n");
+            exit(1);
             return 0x0000;
         }
         return (read8(addr + 1) << 8) | read8(addr);
@@ -59,6 +94,8 @@ namespace rv32ima{
                 trap_type::EXCEPTION,
                 trap_code::LOAD_ADDR_MISALIGNED
             );
+            printf("alignement error\n");
+            exit(1);
             return 0x00000000;
         }
         return (read8(addr + 3) << 24) | (read8(addr + 2) << 16) | (read8(addr + 1) << 8) | read8(addr);
@@ -70,6 +107,8 @@ namespace rv32ima{
                 trap_type::EXCEPTION,
                 trap_code::STORE_ADDR_MISALIGNED
             );
+            printf("alignement error\n");
+            exit(1);
             return;
         }
         write8(addr, (uint8_t)(0xff & val));
@@ -82,6 +121,8 @@ namespace rv32ima{
                 trap_type::EXCEPTION,
                 trap_code::STORE_ADDR_MISALIGNED
             );
+            printf("alignement error\n");
+            exit(1);
             return;
         }
         write8(addr, (uint8_t)(0xff & val));

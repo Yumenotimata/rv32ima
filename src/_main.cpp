@@ -5,8 +5,11 @@
 #include <vector>
 #include <unistd.h>
 
+FILE *fp;
+
 int main(void){
     std::vector<char *> test_entry = {
+        "bin/rv32mi-p-csr",
         "bin/rv32ui-p-sub",
         "bin/rv32ui-p-add",
         "bin/rv32ui-p-addi",
@@ -55,7 +58,7 @@ int main(void){
         "bin/rv32um-p-mul",
         "bin/rv32um-p-mulh",
         "bin/rv32um-p-rem",
-        "bin/rv32um-p-remu",
+        "bin/rv32um-p-remu"
     };
 
     for(int i = 0; i < test_entry.size(); i++) {
@@ -74,7 +77,7 @@ int main(void){
                     std::cout << "test failed" << std::endl;
                 break;
             }
-            // usleep(10000);
+            usleep(10000);
         }
     }
 

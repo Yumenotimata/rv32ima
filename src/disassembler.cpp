@@ -115,11 +115,11 @@ namespace rv32ima{
                     case 0x3: // csrrc
                         printf(    "csrrc x%d, %x, x%d\n", rd, csr_addr, rs1); break;
                     case 0x5: // csrrwi
-                        printf(    "csrrwi x%d, %x, %x\n", rd, csr_addr, imm_i); break;
+                        printf(    "csrrwi x%d, %x, %x\n", rd, csr_addr, imm_z); break;
                     case 0x6: // csrrsi
-                        printf(    "csrrsi x%d, %x, %x\n", rd, csr_addr, imm_i); break;
+                        printf(    "csrrsi x%d, %x, %x\n", rd, csr_addr, imm_z); break;
                     case 0x7: // csrrci
-                        printf(    "csrrci x%d, %x, %x\n", rd, csr_addr, imm_i); break;
+                        printf(    "csrrci x%d, %x, %x\n", rd, csr_addr, imm_z); break;
                 }
                 break;
             case 0x0f: // fence

@@ -2,15 +2,21 @@
 #include "../inc/bus.hpp"
 #include "../inc/csr.hpp"
 
+extern FILE *fp;
+
 namespace rv32ima{
     processor_t::processor_t(std::unique_ptr<bus_t> &&bus) 
         : bus(std::move(bus)), pc(0x80000000)
     {
-
+        fp = fopen("debug/log.txt", "w");
+        if(fp == NULL){
+            printf("Error: cannot open log file\n");
+            exit(1);
+        }
     }
 
     processor_t::~processor_t(){
-
+        fclose(fp);
     }
 
     void processor_t::handle_trap(){
@@ -19,8 +25,20 @@ namespace rv32ima{
         csr.mstatus.pie = (uint32_t)csr.mstatus.ie;
         csr.mepc = pc;
 
+        
+            // printf("interrupt 0b%032b\n", csr[MSTATUS]);
+            // exit(1);
+
+        if((uint32_t)csr.mstatus.ie == 1) {
+            // printf("interrupt 0b%032b\n", csr[MSTATUS]);
+            // exit(1);
+        }
+
         if((uint32_t)csr.mstatus.ie == 1 && bus->trap.type == trap_type::INTERRUPT){
-            if(bus->trap.code == trap_code::MACHINE_TIMER_INTERRUPT) csr.mip.tip = 1;
+            // printf("interrupt\n");
+            // exit(1);
+            if(bus->trap.code == trap_code::MACHINE_TIMER_INTERRUPT) {printf("machien timer interrupt\n");  csr.mip.tip = 1;}
+            else if(bus->trap.code == trap_code::MACHINE_SOFTWARE_INTERRUPT) {printf("mashine software interrupt\n");exit(1);}
         }
 
         csr.mstatus.ie = 0;
@@ -34,12 +52,18 @@ namespace rv32ima{
 
     void processor_t::step(){
         if(bus->trap.has_occurred()){
-            handle_trap();
+            if((uint32_t)csr.mstatus.ie == 1)
+                handle_trap();
+            // printf("handle trap\n");
+            // exit(1);
             bus->trap.clear();
         }
 
         fetch();
         execute();
+
+        bus->step();
+        
         pc += 4;
     }
 
@@ -49,6 +73,7 @@ namespace rv32ima{
 
     void processor_t::execute(){
         
+        // fprintf(fp, "pc = 0x%08x, inst = 0x%08x\n", pc, inst);
         // printf("[0x%08x] ", pc);
         // disassemble(inst);
 
@@ -67,6 +92,7 @@ namespace rv32ima{
                         reg[rd] = bus->read8(reg[rs1] + sext(imm_i, 11)); break;
                     case 0x5: // lhu
                         reg[rd] = bus->read16(true, reg[rs1] + sext(imm_i, 11)); break;
+                    default: printf("unimplemented opcode 0x%08x\n", inst); exit(1);
                 }
                 break;
             case 0x23:
@@ -78,6 +104,7 @@ namespace rv32ima{
                         bus->write16(true, reg[rs1] + sext(imm_s, 11), reg[rs2]); break;
                     case 0x2: // sw
                         bus->write32(true, reg[rs1] + sext(imm_s, 11), reg[rs2]); break;
+                    default: printf("unimplemented opcode 0x%08x\n", inst); exit(1);
                 }
                 break;
             case 0x33:
@@ -101,6 +128,7 @@ namespace rv32ima{
                             if(reg[rs2] == 0) reg[rd] = reg[rs1]; else if(reg[rs2] == -1) reg[rd] = 0; else reg[rd] = (int32_t)reg[rs1] % (int32_t)reg[rs2]; break;
                         case 0x7: // remu
                             if(reg[rs2] == 0) reg[rd] = reg[rs1]; else reg[rd] = (uint32_t)reg[rs1] % (uint32_t)reg[rs2]; break;
+                        default: printf("unimplemented opcode 0x%08x\n", inst); exit(1);
                     }
                 }else
                 {
@@ -122,6 +150,7 @@ namespace rv32ima{
                             reg[rd] = reg[rs1] | reg[rs2]; break;
                         case 0x7: // and
                             reg[rd] = reg[rs1] & reg[rs2]; break;
+                        default: printf("unimplemented opcode 0x%08x\n", inst); exit(1);
                     }
                 }
                 break;
@@ -144,6 +173,7 @@ namespace rv32ima{
                         reg[rd] = reg[rs1] | sext(imm_i, 11); break;
                     case 0x7: // andi
                         reg[rd] = reg[rs1] & sext(imm_i, 11); break;
+                    default: printf("unimplemented opcode 0x%08x\n", inst); exit(1);
                 }
                 break;
             case 0x37: // lui
@@ -169,6 +199,7 @@ namespace rv32ima{
                         if((uint32_t)reg[rs1] < (uint32_t)reg[rs2]) pc += sext(imm_b, 12) - 4; break;
                     case 0x7: // bgeu
                         if((uint32_t)reg[rs1] >= (uint32_t)reg[rs2]) pc += sext(imm_b, 12) - 4; break;
+                    default: printf("unimplemented opcode 0x%08x\n", inst); exit(1);
                 }
                 break;
             case 0x73: // csr
@@ -180,24 +211,45 @@ namespace rv32ima{
                             case 0x0: // ecall
                                 bus->trap.set(trap_type::EXCEPTION, trap_code::ECALL_FROM_MMODE); break;
                             case 0x18: // mret
-                                pc = csr.mepc - 4; break;
+                                pc = csr.mepc - 4; 
+                                csr.mstatus.ie = (uint32_t)csr.mstatus.pie;
+                                printf("mret\n");
+                                // exit(1);
+                                break;
                             default:
                                 printf("Unknown system instruction 0x%08x\n", inst);
                                 exit(1);
                         }
                         break;
                     case 0x1: // csrrw
-                        reg[rd] = csr[csr_addr]; csr[csr_addr] = reg[rs1]; break;
+                    {
+                        uint32_t t = csr[csr_addr]; csr[csr_addr] = reg[rs1]; reg[rd] = t; 
+                        break; 
+                    }
                     case 0x2: // csrrs
-                        reg[rd] = csr[csr_addr]; csr[csr_addr] |= reg[rs1]; break;
+                    {
+                        uint32_t t = csr[csr_addr]; csr[csr_addr] = csr[csr_addr] | reg[rs1]; reg[rd] = t; break; 
+                    }
                     case 0x3: // csrrc
-                        reg[rd] = csr[csr_addr]; csr[csr_addr] &= ~reg[rs1]; break;
+                    {
+                        uint32_t t = csr[csr_addr]; csr[csr_addr] = csr[csr_addr] & ~reg[rs1]; reg[rd] = t; break; 
+                    }
                     case 0x5: // csrrwi
-                        reg[rd] = csr[csr_addr]; csr[csr_addr] = imm_i; break;
+                    {   
+                        if(csr_addr == MSTATUS)printf("0b%032b\n", imm_z);
+                        uint32_t t = csr[csr_addr]; csr[csr_addr] = imm_z; reg[rd] = t; break; 
+                    }
                     case 0x6: // csrrsi
-                        reg[rd] = csr[csr_addr]; csr[csr_addr] |= imm_i; break;
+                    {      
+                        
+                        if(csr_addr == MSTATUS)printf("0b%032b\n", imm_z);
+                        uint32_t t = csr[csr_addr]; csr[csr_addr] = csr[csr_addr] | imm_z; reg[rd] = t; break; 
+                    }
                     case 0x7: // csrrci
-                        reg[rd] = csr[csr_addr]; csr[csr_addr] &= ~imm_i; break;
+                    {
+                        uint32_t t = csr[csr_addr]; csr[csr_addr] = csr[csr_addr] & ~imm_z; reg[rd] = t; break; 
+                    }
+                    default: printf("unimplemented opcode 0x%08x\n", inst); exit(1);
                 }
                 break;
             case 0x0f: //fence
@@ -206,15 +258,37 @@ namespace rv32ima{
                 switch(funct5)
                 {
                     case 0x1: // amoswap.w
-                        reg[rd] = bus->read32(true, reg[rs1]); bus->write32(true, reg[rs1], reg[rs2]); break;
+                    {
+                        uint32_t t =  bus->read32(true, reg[rs1]);
+                        bus->write32(true, reg[rs1], reg[rs2]); 
+                        reg[rd] = t;
+                        break;
+                    }
                     case 0x0: // amoadd.w
-                        reg[rd] = bus->read32(true, reg[rs1]); bus->write32(true, reg[rs1], reg[rs2] + reg[rd]); break;
+                    { 
+                        uint32_t t = bus->read32(true, reg[rs1]);
+                        bus->write32(true, reg[rs1], reg[rs2] + t);
+                        reg[rd] = t;
+                        break;
+                    }
                     case 0x8: // amoor.w
-                        reg[rd] = bus->read32(true, reg[rs1]); bus->write32(true, reg[rs1], reg[rs2] | reg[rd]); break;
+                    {
+                        uint32_t t = bus->read32(true, reg[rs1]);
+                        bus->write32(true, reg[rs1], reg[rs2] | t);
+                        reg[rd] = t;
+                        break;
+                    }
                     case 0xc: // amoand.w
-                        reg[rd] = bus->read32(true, reg[rs1]); bus->write32(true, reg[rs1], reg[rs2] & reg[rd]); break;
+                    {
+                        uint32_t t  = bus->read32(true, reg[rs1]);
+                        bus->write32(true, reg[rs1], reg[rs2] & t); 
+                        reg[rd] = t;
+                        break;
+                    }
                     case 0x2: // lr.w
-                        reg[rd] = bus->read32(true, reg[rs1]); register_reservation[reg[rs1]] = true; break;
+                        reg[rd] = bus->read32(true, reg[rs1]); 
+                        register_reservation[reg[rs1]] = true;
+                        break;
                     case 0x3: // sc.w
                     {
                         auto it = register_reservation.find(reg[rs1]);

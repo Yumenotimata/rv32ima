@@ -7,5 +7,5 @@ set(LIBRARY_OUTPUT_PATH build)
 
 add_subdirectory(elf)
 
-add_executable(main src/_main.cpp src/processor.cpp src/disassembler.cpp src/bus.cpp src/csr.cpp)
+add_executable(main src/main.cpp src/processor.cpp src/disassembler.cpp src/bus.cpp src/csr.cpp src/uart.cpp src/clint.cpp)
 target_link_libraries(main elf)

@@ -1,1 +1,1 @@
-/usr/bin/c++ CMakeFiles/main.dir/src/_main.cpp.o CMakeFiles/main.dir/src/processor.cpp.o CMakeFiles/main.dir/src/disassembler.cpp.o CMakeFiles/main.dir/src/bus.cpp.o CMakeFiles/main.dir/src/csr.cpp.o -o build/main  elf/build/libelf.a 
+/usr/bin/c++ CMakeFiles/main.dir/src/main.cpp.o CMakeFiles/main.dir/src/processor.cpp.o CMakeFiles/main.dir/src/disassembler.cpp.o CMakeFiles/main.dir/src/bus.cpp.o CMakeFiles/main.dir/src/csr.cpp.o CMakeFiles/main.dir/src/uart.cpp.o CMakeFiles/main.dir/src/clint.cpp.o -o build/main  elf/build/libelf.a 
