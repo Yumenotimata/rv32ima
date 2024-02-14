@@ -4,6 +4,7 @@
 CMakeFiles/main.dir/src/bus.cpp.o: elf/inc/elf.hpp
 CMakeFiles/main.dir/src/bus.cpp.o: inc/bus.hpp
 CMakeFiles/main.dir/src/bus.cpp.o: inc/clint.hpp
+CMakeFiles/main.dir/src/bus.cpp.o: inc/csr.hpp
 CMakeFiles/main.dir/src/bus.cpp.o: inc/def.hpp
 CMakeFiles/main.dir/src/bus.cpp.o: inc/uart.hpp
 CMakeFiles/main.dir/src/bus.cpp.o: src/bus.cpp

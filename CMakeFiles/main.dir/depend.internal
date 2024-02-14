@@ -5,6 +5,7 @@ CMakeFiles/main.dir/src/bus.cpp.o
  /workspaces/rv32ima/elf/inc/elf.hpp
  /workspaces/rv32ima/inc/bus.hpp
  /workspaces/rv32ima/inc/clint.hpp
+ /workspaces/rv32ima/inc/csr.hpp
  /workspaces/rv32ima/inc/def.hpp
  /workspaces/rv32ima/inc/uart.hpp
  /workspaces/rv32ima/src/bus.cpp

@@ -6,15 +6,37 @@
 
 #IncludeRegexTransform: 
 
-/workspaces/rv32ima/inc/uart.hpp
+/workspaces/rv32ima/inc/clint.hpp
 cstdint
 -
 cstdio
 -
 cstdlib
 -
+memory
+-
 
-/workspaces/rv32ima/src/uart.cpp
-../inc/uart.hpp
-/workspaces/rv32ima/inc/uart.hpp
+/workspaces/rv32ima/inc/csr.hpp
+cstdint
+-
+cstdlib
+-
+cstdio
+-
+def.hpp
+/workspaces/rv32ima/inc/def.hpp
+
+/workspaces/rv32ima/inc/def.hpp
+cstdint
+-
+cstdio
+-
+
+/workspaces/rv32ima/src/clint.cpp
+../inc/clint.hpp
+/workspaces/rv32ima/inc/clint.hpp
+../inc/def.hpp
+/workspaces/rv32ima/inc/def.hpp
+../inc/csr.hpp
+/workspaces/rv32ima/inc/csr.hpp
 

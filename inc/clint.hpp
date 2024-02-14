@@ -12,7 +12,7 @@ namespace rv32ima{
             clint_t(std::shared_ptr<csr_t> csr);
             ~clint_t();
             uint32_t read(uint32_t addr);
-            void write(uint32_t addr, uint32_t val);
+            void write(uint32_t addr, uint8_t val);
             void step();
         private:
             std::shared_ptr<csr_t> csr;

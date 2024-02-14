@@ -20,10 +20,13 @@ namespace rv32ima{
     }
 
     void processor_t::handle_trap(){
-        (*csr).mcause.trap_type = bus->trap.type;
-        (*csr).mcause.trap_code = bus->trap.code;
-        (*csr).mstatus.pie = (uint32_t)(*csr).mstatus.ie;
+        // (*csr).mcause.trap_type = bus->trap.type;
+        // (*csr).mcause.trap_code = bus->trap.code;
+        printf("interrupt\n");
+        (*csr).mstatus.pie = 1;
         (*csr).mepc = pc;
+        printf("mepc is 0x%08x\n", pc);
+
 
         
             // printf("interrupt 0b%032b\n", (*csr)[MSTATUS]);
@@ -33,31 +36,35 @@ namespace rv32ima{
             // printf("interrupt 0b%032b\n", (*csr)[MSTATUS]);
             // exit(1);
         }
-
-        // if((uint32_t)(*csr).mstatus.ie == 1 && bus->trap.type == trap_type::INTERRUPT){
-        //     // printf("interrupt\n");
-        //     // exit(1);
-        //     if(bus->trap.code == trap_code::MACHINE_TIMER_INTERRUPT) {printf("machien timer interrupt\n");  (*csr).mip.tip = 1;}
-        //     else if(bus->trap.code == trap_code::MACHINE_SOFTWARE_INTERRUPT) {printf("mashine software interrupt\n");exit(1);}
-        // }
-
         (*csr).mstatus.ie = 0;
 
         if((uint32_t)(*csr).mtvec.mode == trap_vector_mode::VECTORED){
-            pc = ((uint32_t)(*csr).mtvec.base << 2) + (bus->trap.code << 2);
+            pc = ((uint32_t)(*csr).mtvec.base << 2) + ((uint32_t)(*csr).mcause.trap_code << 2);
         }else if((uint32_t)(*csr).mtvec.mode == trap_vector_mode::DIRECT){
             pc = ((uint32_t)(*csr).mtvec.base << 2);
+            printf("pc = 0x%08x\n", pc);
+           // exit(1);
         }
     }
 
     void processor_t::step(){
-        if(bus->trap.has_occurred()){
+        static bool e = false;
+        if(csr->occured && !e){
+           // e = true;
             if((uint32_t)(*csr).mstatus.ie == 1)
                 handle_trap();
             // printf("handle trap\n");
             // exit(1);
             bus->trap.clear();
+            csr->occured = false;
         }
+
+
+        // if(csr->occured && (uint32_t)(*csr).mstatus.ie == 1){
+        //     handle_trap();
+        //     csr->occured = false;
+        // }
+        
 
         fetch();
         execute();
@@ -209,11 +216,12 @@ namespace rv32ima{
                         switch(funct7)
                         {
                             case 0x0: // ecall
-                                bus->trap.set(trap_type::EXCEPTION, trap_code::ECALL_FROM_MMODE); break;
+                                csr->set_trap_pending(trap_type::EXCEPTION, trap_code::ECALL_FROM_MMODE); break;
                             case 0x18: // mret
                                 pc = (*csr).mepc - 4; 
-                                (*csr).mstatus.ie = (uint32_t)(*csr).mstatus.pie;
-                                printf("mret\n");
+                            (*csr).mstatus.ie = 1;
+                               printf("mret\n");
+                               printf("mepc is 0x%08x\n", (*csr).mepc);
                                 // exit(1);
                                 break;
                             default:
@@ -241,8 +249,6 @@ namespace rv32ima{
                     }
                     case 0x6: // csrrsi
                     {      
-                        
-                       // if(csr_addr == MSTATUS)printf("0b%032b\n", imm_z);
                         uint32_t t = (*csr)[csr_addr]; (*csr)[csr_addr] = (*csr)[csr_addr] | imm_z; reg[rd] = t; break; 
                     }
                     case 0x7: // csrrci

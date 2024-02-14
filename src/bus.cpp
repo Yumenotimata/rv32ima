@@ -1,5 +1,6 @@
 #include "../inc/bus.hpp"
 #include "../inc/def.hpp"
+#include "../inc/csr.hpp"
 
 #include "../elf/inc/elf.hpp"
 
@@ -77,7 +78,7 @@ namespace rv32ima{
 
     uint16_t bus_t::read16(bool trap_handle, uint32_t addr){
         if(trap_handle && (addr & 0x1) != 0){
-            trap.set(
+            csr->set_trap_pending(
                 trap_type::EXCEPTION,
                 trap_code::LOAD_ADDR_MISALIGNED
             );

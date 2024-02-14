@@ -21,7 +21,7 @@ namespace rv32ima{
         constexpr trap_code_t STORE_ADDR_MISALIGNED   = 6;
         constexpr trap_code_t STORE_ACCESS_FAULT      = 7;
         constexpr trap_code_t ECALL_FROM_MMODE        = 11;
-        constexpr trap_code_t MACHINE_TIMER_INTERRUPT = 0;
+        constexpr trap_code_t MACHINE_TIMER_INTERRUPT = 7;
         constexpr trap_code_t MACHINE_SOFTWARE_INTERRUPT = 3;
     };
 
