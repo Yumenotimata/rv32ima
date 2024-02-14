@@ -26,11 +26,11 @@ namespace rv32ima{
         elf32.load(ram.get(), ramsize, LOAD);
     }
 
-    bus_t::bus_t(std::unique_ptr<uint8_t[]> &&ram, uint32_t ramsize) 
-        : ram(std::move(ram)), ramsize(ramsize)
+    bus_t::bus_t(std::unique_ptr<uint8_t[]> &&ram, uint32_t ramsize, std::shared_ptr<csr_t> csr) 
+        : ram(std::move(ram)), ramsize(ramsize), csr(csr)
     {
         uart = std::make_unique<uart_t>(trap);
-        clint = std::make_unique<clint_t>(trap);
+        clint = std::make_unique<clint_t>(csr);
     }
 
     bus_t::~bus_t(){

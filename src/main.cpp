@@ -21,11 +21,11 @@ int main(int argc, char** argv){
 
     rv32ima::load_binary(argv[1], ram, 0x80000000);
     rv32ima::load_binary(argv[2], ram, 0x80000000 + 0x3FFFA00);
-    std::unique_ptr<rv32ima::bus_t> bus(new rv32ima::bus_t(std::move(ram), 0xffffffff));
+    std::shared_ptr<rv32ima::csr_t> csr = std::make_shared<rv32ima::csr_t>();
+    std::unique_ptr<rv32ima::bus_t> bus(new rv32ima::bus_t(std::move(ram), 0xffffffff, csr));
     rv32ima::processor_t processor(std::move(bus));
 
     processor.reg[11] = 0x80000000 + 0x3FFFA00;
-
 
     while(sig){
         processor.step();

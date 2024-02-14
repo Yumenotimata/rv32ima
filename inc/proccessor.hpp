@@ -34,7 +34,7 @@ namespace rv32ima{
             void execute();
             void handle_trap();
 
-            csr_t csr;
+            std::shared_ptr<csr_t> csr;
             register_t reg;
             std::unique_ptr<bus_t> bus;
             uint32_t pc, inst; 

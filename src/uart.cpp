@@ -25,7 +25,7 @@ namespace rv32ima{
             case 0x05:
                 return 0x60;
             default:
-                printf("unimplemented uart read 0x%x\n", addr);
+             //   printf("unimplemented uart read 0x%x\n", addr);
                 return 0;
                 break;
         }

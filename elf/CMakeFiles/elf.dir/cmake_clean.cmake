@@ -1,6 +1,5 @@
 file(REMOVE_RECURSE
   "CMakeFiles/elf.dir/src/elf.cpp.o"
-  "CMakeFiles/elf.dir/src/elf.cpp.o.d"
   "build/libelf.a"
   "build/libelf.pdb"
 )

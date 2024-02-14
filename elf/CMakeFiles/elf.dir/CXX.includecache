@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/workspaces/rv32ima/elf/inc/elf.hpp
+stdio.h
+-
+stdint.h
+-
+string
+-
+stdlib.h
+-
+vector
+-
+
+/workspaces/rv32ima/elf/src/elf.cpp
+../inc/elf.hpp
+/workspaces/rv32ima/elf/inc/elf.hpp
+

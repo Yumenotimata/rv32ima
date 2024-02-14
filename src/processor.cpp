@@ -6,7 +6,7 @@ extern FILE *fp;
 
 namespace rv32ima{
     processor_t::processor_t(std::unique_ptr<bus_t> &&bus) 
-        : bus(std::move(bus)), pc(0x80000000)
+        : bus(std::move(bus)), csr(bus->csr), pc(0x80000000)
     {
         fp = fopen("debug/log.txt", "w");
         if(fp == NULL){
@@ -20,39 +20,39 @@ namespace rv32ima{
     }
 
     void processor_t::handle_trap(){
-        csr.mcause.trap_type = bus->trap.type;
-        csr.mcause.trap_code = bus->trap.code;
-        csr.mstatus.pie = (uint32_t)csr.mstatus.ie;
-        csr.mepc = pc;
+        (*csr).mcause.trap_type = bus->trap.type;
+        (*csr).mcause.trap_code = bus->trap.code;
+        (*csr).mstatus.pie = (uint32_t)(*csr).mstatus.ie;
+        (*csr).mepc = pc;
 
         
-            // printf("interrupt 0b%032b\n", csr[MSTATUS]);
+            // printf("interrupt 0b%032b\n", (*csr)[MSTATUS]);
             // exit(1);
 
-        if((uint32_t)csr.mstatus.ie == 1) {
-            // printf("interrupt 0b%032b\n", csr[MSTATUS]);
+        if((uint32_t)(*csr).mstatus.ie == 1) {
+            // printf("interrupt 0b%032b\n", (*csr)[MSTATUS]);
             // exit(1);
         }
 
-        if((uint32_t)csr.mstatus.ie == 1 && bus->trap.type == trap_type::INTERRUPT){
-            // printf("interrupt\n");
-            // exit(1);
-            if(bus->trap.code == trap_code::MACHINE_TIMER_INTERRUPT) {printf("machien timer interrupt\n");  csr.mip.tip = 1;}
-            else if(bus->trap.code == trap_code::MACHINE_SOFTWARE_INTERRUPT) {printf("mashine software interrupt\n");exit(1);}
-        }
+        // if((uint32_t)(*csr).mstatus.ie == 1 && bus->trap.type == trap_type::INTERRUPT){
+        //     // printf("interrupt\n");
+        //     // exit(1);
+        //     if(bus->trap.code == trap_code::MACHINE_TIMER_INTERRUPT) {printf("machien timer interrupt\n");  (*csr).mip.tip = 1;}
+        //     else if(bus->trap.code == trap_code::MACHINE_SOFTWARE_INTERRUPT) {printf("mashine software interrupt\n");exit(1);}
+        // }
 
-        csr.mstatus.ie = 0;
+        (*csr).mstatus.ie = 0;
 
-        if((uint32_t)csr.mtvec.mode == trap_vector_mode::VECTORED){
-            pc = ((uint32_t)csr.mtvec.base << 2) + (bus->trap.code << 2);
-        }else if((uint32_t)csr.mtvec.mode == trap_vector_mode::DIRECT){
-            pc = ((uint32_t)csr.mtvec.base << 2);
+        if((uint32_t)(*csr).mtvec.mode == trap_vector_mode::VECTORED){
+            pc = ((uint32_t)(*csr).mtvec.base << 2) + (bus->trap.code << 2);
+        }else if((uint32_t)(*csr).mtvec.mode == trap_vector_mode::DIRECT){
+            pc = ((uint32_t)(*csr).mtvec.base << 2);
         }
     }
 
     void processor_t::step(){
         if(bus->trap.has_occurred()){
-            if((uint32_t)csr.mstatus.ie == 1)
+            if((uint32_t)(*csr).mstatus.ie == 1)
                 handle_trap();
             // printf("handle trap\n");
             // exit(1);
@@ -211,8 +211,8 @@ namespace rv32ima{
                             case 0x0: // ecall
                                 bus->trap.set(trap_type::EXCEPTION, trap_code::ECALL_FROM_MMODE); break;
                             case 0x18: // mret
-                                pc = csr.mepc - 4; 
-                                csr.mstatus.ie = (uint32_t)csr.mstatus.pie;
+                                pc = (*csr).mepc - 4; 
+                                (*csr).mstatus.ie = (uint32_t)(*csr).mstatus.pie;
                                 printf("mret\n");
                                 // exit(1);
                                 break;
@@ -223,31 +223,31 @@ namespace rv32ima{
                         break;
                     case 0x1: // csrrw
                     {
-                        uint32_t t = csr[csr_addr]; csr[csr_addr] = reg[rs1]; reg[rd] = t; 
+                        uint32_t t = (*csr)[csr_addr]; (*csr)[csr_addr] = reg[rs1]; reg[rd] = t; 
                         break; 
                     }
                     case 0x2: // csrrs
                     {
-                        uint32_t t = csr[csr_addr]; csr[csr_addr] = csr[csr_addr] | reg[rs1]; reg[rd] = t; break; 
+                        uint32_t t = (*csr)[csr_addr]; (*csr)[csr_addr] = (*csr)[csr_addr] | reg[rs1]; reg[rd] = t; break; 
                     }
                     case 0x3: // csrrc
                     {
-                        uint32_t t = csr[csr_addr]; csr[csr_addr] = csr[csr_addr] & ~reg[rs1]; reg[rd] = t; break; 
+                        uint32_t t = (*csr)[csr_addr]; (*csr)[csr_addr] = (*csr)[csr_addr] & ~reg[rs1]; reg[rd] = t; break; 
                     }
                     case 0x5: // csrrwi
                     {   
-                        if(csr_addr == MSTATUS)printf("0b%032b\n", imm_z);
-                        uint32_t t = csr[csr_addr]; csr[csr_addr] = imm_z; reg[rd] = t; break; 
+                      //  if(csr_addr == MSTATUS)printf("0b%032b\n", imm_z);
+                        uint32_t t = (*csr)[csr_addr]; (*csr)[csr_addr] = imm_z; reg[rd] = t; break; 
                     }
                     case 0x6: // csrrsi
                     {      
                         
-                        if(csr_addr == MSTATUS)printf("0b%032b\n", imm_z);
-                        uint32_t t = csr[csr_addr]; csr[csr_addr] = csr[csr_addr] | imm_z; reg[rd] = t; break; 
+                       // if(csr_addr == MSTATUS)printf("0b%032b\n", imm_z);
+                        uint32_t t = (*csr)[csr_addr]; (*csr)[csr_addr] = (*csr)[csr_addr] | imm_z; reg[rd] = t; break; 
                     }
                     case 0x7: // csrrci
                     {
-                        uint32_t t = csr[csr_addr]; csr[csr_addr] = csr[csr_addr] & ~imm_z; reg[rd] = t; break; 
+                        uint32_t t = (*csr)[csr_addr]; (*csr)[csr_addr] = (*csr)[csr_addr] & ~imm_z; reg[rd] = t; break; 
                     }
                     default: printf("unimplemented opcode 0x%08x\n", inst); exit(1);
                 }

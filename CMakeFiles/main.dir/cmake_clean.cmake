@@ -1,18 +1,11 @@
 file(REMOVE_RECURSE
   "CMakeFiles/main.dir/src/bus.cpp.o"
-  "CMakeFiles/main.dir/src/bus.cpp.o.d"
   "CMakeFiles/main.dir/src/clint.cpp.o"
-  "CMakeFiles/main.dir/src/clint.cpp.o.d"
   "CMakeFiles/main.dir/src/csr.cpp.o"
-  "CMakeFiles/main.dir/src/csr.cpp.o.d"
   "CMakeFiles/main.dir/src/disassembler.cpp.o"
-  "CMakeFiles/main.dir/src/disassembler.cpp.o.d"
   "CMakeFiles/main.dir/src/main.cpp.o"
-  "CMakeFiles/main.dir/src/main.cpp.o.d"
   "CMakeFiles/main.dir/src/processor.cpp.o"
-  "CMakeFiles/main.dir/src/processor.cpp.o.d"
   "CMakeFiles/main.dir/src/uart.cpp.o"
-  "CMakeFiles/main.dir/src/uart.cpp.o.d"
   "build/main"
   "build/main.pdb"
 )

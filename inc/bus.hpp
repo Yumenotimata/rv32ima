@@ -10,12 +10,14 @@ namespace rv32ima {
     void load_binary(const char *bin_path, std::unique_ptr<uint8_t[]> &ram, uint32_t offset_addr);
     void load_elf(const char *elf_path, std::unique_ptr<uint8_t[]> &ram, uint32_t offset_addr, uint32_t ramsize);
 
+    class csr_t;
     class bus_t {
     public:
-        bus_t(std::unique_ptr<uint8_t[]> &&ram, uint32_t ramsize);
+        bus_t(std::unique_ptr<uint8_t[]> &&ram, uint32_t ramsize, std::shared_ptr<csr_t> csr);
         ~bus_t();
         
         trap_t trap;
+        std::shared_ptr<csr_t> csr;
         std::unique_ptr<uart_t> uart;
         std::unique_ptr<clint_t> clint;
         std::unique_ptr<uint8_t[]> ram;

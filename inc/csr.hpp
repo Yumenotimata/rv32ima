@@ -36,6 +36,18 @@ namespace rv32ima{
                 return csr[index];
             }
 
+            void set_trap_pending(trap_type_t type, trap_code_t code){
+                if(occured && type == trap_type::EXCEPTION)
+                    return;
+                if(static_cast<uint32_t>(mstatus.ie) == 1){
+                    mcause.trap_type = type;
+                    mcause.trap_code = code;
+                    occured = true;
+                }
+            }
+
+            bool occured = false;
+
             union {
                 bitfield<uint32_t, 11>  eie;
                 bitfield<uint32_t, 7>   tie;

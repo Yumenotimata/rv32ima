@@ -1,9 +1,10 @@
 #include "../inc/clint.hpp"
 #include "../inc/def.hpp"
+#include "../inc/csr.hpp"
 
 namespace rv32ima{
-    clint_t::clint_t(trap_t &trap) 
-        : trap(trap)
+    clint_t::clint_t(std::shared_ptr<csr_t> csr) 
+        : csr(csr)
     {
         mtimecmp = 0;
         mtime = 0;
@@ -17,18 +18,26 @@ namespace rv32ima{
     void clint_t::step(){
         mtime ++;
         
-        if(mtimecmp != 0 && mtime >= mtimecmp){
-            trap.set(
-                trap_type::INTERRUPT,
-                trap_code::MACHINE_TIMER_INTERRUPT
-            );    
+        // if timer interrupt is enable
+        if(static_cast<uint32_t>(csr->mie.tie) == 1){
+            if(mtimecmp != 0 && mtime >= mtimecmp){
+                csr->set_trap_pending(
+                    trap_type::INTERRUPT,
+                    trap_code::MACHINE_TIMER_INTERRUPT
+                );  
+            }
         }
 
-        if(msip != 0){
-            trap.set(
-                trap_type::INTERRUPT,
-                trap_code::MACHINE_SOFTWARE_INTERRUPT
-            );
+        // if machine software interrupt is enable
+        if(static_cast<uint32_t>(csr->mie.sie) == 1){
+            if(msip != 0){
+                csr->set_trap_pending(
+                    trap_type::INTERRUPT,
+                    trap_code::MACHINE_SOFTWARE_INTERRUPT
+                );
+                printf("machine software interrupt\n");
+                exit(1);  
+            }
         }
     }
 

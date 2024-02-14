@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/workspaces/rv32ima/inc/uart.hpp
+cstdint
+-
+cstdio
+-
+cstdlib
+-
+
+/workspaces/rv32ima/src/uart.cpp
+../inc/uart.hpp
+/workspaces/rv32ima/inc/uart.hpp
+
